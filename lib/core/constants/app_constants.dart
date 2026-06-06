@@ -2,15 +2,17 @@
 class AppConstants {
   AppConstants._();
 
-  static const String appName = 'YT Converter';
-  static const String appTagline = 'Download YouTube as MP3 or MP4';
+  /// Wordmark shown in the crest.
+  static const String appName = 'Sleek';
+  static const String appTagline = 'Films & Recordings, Transcribed';
 
   /// Layout breakpoint (logical px) above which we treat the device as a tablet.
   static const double tabletBreakpoint = 600;
 
-  /// Maximum content width on large screens so the UI doesn't stretch edge-to-edge.
-  static const double maxContentWidth = 720;
+  /// The manuscript column width — matches the design's mobile artboard. On
+  /// wider screens the column is centered on the dark surround.
+  static const double maxContentWidth = 440;
 
   /// Default sub-folder created inside the chosen directory for outputs.
-  static const String outputFolderName = 'YT Converter';
+  static const String outputFolderName = 'Sleek';
 }

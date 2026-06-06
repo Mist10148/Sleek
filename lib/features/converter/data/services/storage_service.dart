@@ -1,10 +1,16 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/failures.dart';
+
+/// Opens the system directory picker and returns the chosen path, or null if
+/// the user cancelled. (file_picker 11 exposes static methods on [FilePicker].)
+Future<String?> pickSaveDirectory() =>
+    FilePicker.getDirectoryPath(dialogTitle: 'Choose where to save');
 
 /// Resolves where output files are written and handles the storage permission
 /// dance. On modern Android we default to the app's external files directory

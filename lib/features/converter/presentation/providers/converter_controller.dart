@@ -66,13 +66,12 @@ class ConverterController extends Notifier<ConversionState> {
       final info = await _repo.fetchInfo(url);
       final defaultDir =
           state.outputDirectory ?? await _repo.defaultDirectory();
-      // Preselect the best quality for the current format.
       final options = info.qualitiesFor(state.format);
       state = state.copyWith(
         stage: ConversionStage.ready,
         info: info,
         outputDirectory: defaultDir,
-        quality: options.isNotEmpty ? options.first : null,
+        quality: _defaultQuality(options, state.format),
       );
     } catch (e) {
       _fail(e);
@@ -81,13 +80,21 @@ class ConverterController extends Notifier<ConversionState> {
 
   void selectFormat(MediaFormat format) {
     final info = state.info;
-    final options = info?.qualitiesFor(format) ?? const [];
+    final options = info?.qualitiesFor(format) ?? const <QualityOption>[];
     state = state.copyWith(
       format: format,
-      quality: options.isNotEmpty ? options.first : null,
+      quality: _defaultQuality(options, format),
       clearQuality: options.isEmpty,
       clearResult: true,
     );
+  }
+
+  /// Preselect the default quality: for MP4 the second resolution when present
+  /// (a sensible "HD" default), otherwise the first; for MP3 the first tier.
+  QualityOption? _defaultQuality(List<QualityOption> options, MediaFormat format) {
+    if (options.isEmpty) return null;
+    if (format == MediaFormat.mp4 && options.length > 1) return options[1];
+    return options.first;
   }
 
   void selectQuality(QualityOption quality) {

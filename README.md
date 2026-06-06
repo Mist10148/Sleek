@@ -1,19 +1,20 @@
-# YT Converter 🎵🎬
+# Sleek 🎵🎬
 
-A Flutter mobile app that downloads a YouTube video as **MP3** or **MP4**, with a
-clean Material 3 UI, format/quality selection, a save-location picker, and a live
-progress bar (percent, size, speed, ETA, elapsed time).
+A Flutter mobile app that downloads a YouTube video as **MP3** or **MP4**. The UI is a
+dark "candlelit manuscript / library" design with three switchable *bindings*
+(I · Codex, II · Folio, III · Illuminated), format/quality selection, a save-location
+picker, and a live progress meter (percent, size, speed, ETA, elapsed time).
 
 > **Personal use only.** Downloading from YouTube may breach YouTube's Terms of
 > Service and copyright law. Only download content you own or have permission to
 > download. Provided for educational purposes — see [docs/PRD.md](docs/PRD.md#8-legal--disclaimer).
 
 ## Status
-- ✅ Full UI, link → metadata preview, format/quality/destination selection.
+- ✅ Full manuscript UI with three switchable bindings; link → metadata preview →
+  format/quality/destination selection → live progress → done receipt.
 - ✅ **MP4 download works** end-to-end with progress.
-- 🚧 **MP3** currently downloads the best source audio; true `.mp3` re-encoding via
-  ffmpeg is **Phase 3** (see [docs/PHASE_TASKS.md](docs/PHASE_TASKS.md)). Until then
-  `conversion_service.dart` does a passthrough rename.
+- ✅ **MP3 is real** — the best source audio is downloaded then re-encoded to a true
+  `.mp3` at the chosen bitrate with ffmpeg (`ffmpeg_kit_flutter_new`).
 
 ## Requirements
 - Flutter 3.41+ / Dart 3.11+
@@ -36,7 +37,7 @@ lib/
 ├── app.dart                        # MaterialApp, theme, home
 ├── core/
 │   ├── constants/app_constants.dart
-│   ├── theme/                      # app_theme.dart, app_colors.dart (Material 3)
+│   ├── theme/                      # app_theme.dart, manuscript_theme.dart (3 bindings)
 │   ├── responsive/responsive.dart  # phone vs tablet, width-capped content
 │   ├── utils/                      # formatters.dart, validators.dart
 │   └── errors/failures.dart

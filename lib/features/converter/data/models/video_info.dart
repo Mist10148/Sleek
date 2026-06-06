@@ -11,6 +11,7 @@ class VideoInfo {
     required this.duration,
     required this.thumbnailUrl,
     required this.videoQualities,
+    required this.audioQualities,
   });
 
   final String id;
@@ -19,10 +20,12 @@ class VideoInfo {
   final Duration? duration;
   final String thumbnailUrl;
 
-  /// Concrete video resolutions available for MP4. Audio qualities are fixed
-  /// tiers ([kAudioQualities]) since we always grab the best source audio.
+  /// Concrete MP4 (muxed) resolutions available, best first, with real sizes.
   final List<QualityOption> videoQualities;
 
+  /// MP3 bitrate tiers with size estimates derived from the clip duration.
+  final List<QualityOption> audioQualities;
+
   List<QualityOption> qualitiesFor(MediaFormat format) =>
-      format.isAudio ? kAudioQualities : videoQualities;
+      format.isAudio ? audioQualities : videoQualities;
 }

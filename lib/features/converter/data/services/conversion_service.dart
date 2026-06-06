@@ -1,35 +1,40 @@
 import 'dart:io';
 
-/// Converts a downloaded audio file into a true `.mp3` at a target bitrate.
-///
-/// PHASE 3 (see docs/PHASE_TASKS.md): real conversion is done with ffmpeg via
-/// the `ffmpeg_kit_flutter_new` package. The wiring is intentionally isolated
-/// here so the rest of the app already calls a stable interface.
-///
-/// Until ffmpeg is added, [convertToMp3] performs a no-op "passthrough": it
-/// renames the source audio (m4a/webm) to the requested `.mp3` output path so
-/// the end-to-end flow works on a device. The container is technically still
-/// the source codec; swap in the ffmpeg call below to produce real MP3 audio.
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+
+import '../../../../core/errors/failures.dart';
+
+/// Converts a downloaded audio stream into a true `.mp3` at a target bitrate,
+/// using ffmpeg (`ffmpeg_kit_flutter_new`). The downloaded source is whatever
+/// container YouTube served (m4a/webm/opus); ffmpeg re-encodes it to MP3.
 class ConversionService {
-  /// Returns the path to the produced `.mp3` (passthrough until Phase 3).
+  /// Re-encodes [sourcePath] to a real MP3 at [targetBitrateKbps] written to
+  /// [outputPath], then deletes the source. Returns the output path.
   Future<String> convertToMp3({
     required String sourcePath,
     required String outputPath,
     required int targetBitrateKbps,
   }) async {
-    // ── Phase 3: replace the passthrough below with ────────────────────────
-    // final session = await FFmpegKit.execute(
-    //   '-y -i "$sourcePath" -vn -ac 2 -b:a ${targetBitrateKbps}k "$outputPath"',
-    // );
-    // final rc = await session.getReturnCode();
-    // if (!ReturnCode.isSuccess(rc)) throw Failures.unknown('ffmpeg failed');
-    // await File(sourcePath).delete();
-    // return outputPath;
-    // ────────────────────────────────────────────────────────────────────────
+    // -y overwrite · -vn drop any video · -ac 2 stereo · libmp3lame at the
+    // chosen CBR bitrate. Paths are quoted to survive spaces.
+    final String cmd = '-y -i "$sourcePath" -vn -acodec libmp3lame '
+        '-ac 2 -b:a ${targetBitrateKbps}k "$outputPath"';
 
+    final session = await FFmpegKit.execute(cmd);
+    final ReturnCode? rc = await session.getReturnCode();
+
+    if (!ReturnCode.isSuccess(rc)) {
+      final String? logs = await session.getAllLogsAsString();
+      // Clean up a half-written output if ffmpeg failed.
+      final File out = File(outputPath);
+      if (await out.exists()) await out.delete();
+      throw Failures.unknown('ffmpeg exited ${rc?.getValue()}: $logs');
+    }
+
+    // Encode succeeded — drop the intermediate source file.
     final File src = File(sourcePath);
-    if (sourcePath == outputPath) return outputPath;
-    await src.rename(outputPath);
+    if (await src.exists()) await src.delete();
     return outputPath;
   }
 }

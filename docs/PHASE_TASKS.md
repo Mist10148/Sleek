@@ -27,13 +27,14 @@ Checklist for building YT Converter. ✅ = done in the current scaffold,
 - [x] Success card (size, time, path) + "Convert another".
 - [ ] **Verify on a real device** that an MP4 downloads and plays.
 
-## Phase 3 — True MP3 via ffmpeg ⬜
-- [ ] Add `ffmpeg_kit_flutter_new` (the original `ffmpeg_kit_flutter` was retired in 2025).
-- [ ] Replace the passthrough in `conversion_service.dart` with an `FFmpegKit.execute`
-      call: `-y -i <src> -vn -ac 2 -b:a <bitrate>k <out.mp3>`.
-- [ ] Delete the temp source file after a successful encode.
-- [ ] Show a separate "Converting…" sub-stage in the progress card during encode.
-- [ ] Test 128 / 192 / 320 kbps outputs.
+## Phase 3 — True MP3 via ffmpeg ✅
+- [x] Add `ffmpeg_kit_flutter_new` (the original `ffmpeg_kit_flutter` was retired in 2025).
+- [x] Replace the passthrough in `conversion_service.dart` with an `FFmpegKit.execute`
+      call: `-y -i <src> -vn -acodec libmp3lame -ac 2 -b:a <bitrate>k <out.mp3>`.
+- [x] Delete the temp source file after a successful encode (and the partial output on failure).
+- [x] Quality tiers 320 / 256 / 192 / 128 kbps selectable.
+- [ ] Show a distinct "Converting…" sub-stage in the meter during the encode (currently the
+      bar rests at 100% while ffmpeg runs).
 
 ## Phase 4 — UX polish & settings ⬜
 - [ ] Entrance animations (flutter_animate) for cards.
