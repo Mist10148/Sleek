@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'features/converter/presentation/providers/theme_provider.dart';
-import 'features/converter/presentation/screens/home_screen.dart';
+import 'features/shell/presentation/app_shell.dart';
 
 class YtConverterApp extends ConsumerWidget {
   const YtConverterApp({super.key});
@@ -18,7 +18,7 @@ class YtConverterApp extends ConsumerWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
-      home: const HomeScreen(),
+      home: const AppShell(),
     );
   }
 }

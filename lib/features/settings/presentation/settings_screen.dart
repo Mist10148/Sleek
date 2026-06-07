@@ -14,9 +14,16 @@ import '../../converter/presentation/widgets/manuscript/mss_icons.dart';
 import '../../converter/presentation/widgets/manuscript/ornaments.dart';
 import '../../converter/presentation/widgets/manuscript/primitives.dart';
 
-/// Settings — choose a binding (theme skin) and a light / dark / system mode.
+/// "The Study" — choose a binding (theme skin), light/dark mode (the design's
+/// "Illumination"), and review the transcription shelf ("Provenance"). When
+/// [embedded] (hosted as the shell's Study tab, matching `Settings.jsx` —
+/// which has no back button, just the "The Study" / "Settings" header) it
+/// renders bare; otherwise it wraps itself in its own scaffold + back button
+/// for standalone pushes.
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,98 +32,110 @@ class SettingsScreen extends ConsumerWidget {
     final List<HistoryEntry> history = ref.watch(historyProvider);
     final MssPalette p = paletteOf(context);
 
+    final Widget content = SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(26, 28, 26, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          if (embedded) ...<Widget>[
+            MssLabel('The Study', gold: binding.gold),
+            const SizedBox(height: 6),
+            Text(
+              'Settings',
+              style: binding.display0(TextStyle(fontSize: 25, letterSpacing: 0.6, color: p.display)),
+            ),
+          ] else
+            Row(
+              children: <Widget>[
+                SizedBox(
+                  width: 96,
+                  child: MssGhostButton(
+                    label: '‹  Back',
+                    palette: p,
+                    dense: true,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Settings',
+                    textAlign: TextAlign.center,
+                    style: binding.display0(
+                        TextStyle(fontSize: 19, color: p.display)),
+                  ),
+                ),
+                const SizedBox(width: 96),
+              ],
+            ),
+          const SizedBox(height: 28),
+          Fleuron(glyph: binding.ornament == 2 ? '❧' : '✦', gold: binding.gold),
+          const SizedBox(height: 30),
+
+          MssLabel('Illumination', gold: binding.gold),
+          const SizedBox(height: 12),
+          _ThemeModeToggle(
+            binding: binding,
+            palette: p,
+            value: mode,
+            onChanged: (ThemeMode m) =>
+                ref.read(themeModeProvider.notifier).set(m),
+          ),
+          const SizedBox(height: 30),
+
+          HairRule(palette: p, margin: const EdgeInsets.symmetric(vertical: 4)),
+          const SizedBox(height: 26),
+
+          MssLabel('Binding', gold: binding.gold),
+          const SizedBox(height: 6),
+          Text(
+            'The manuscript skin — colours, type, and ornament.',
+            style: p.serif(TextStyle(fontSize: 12.5, color: p.muted)),
+          ),
+          const SizedBox(height: 14),
+          for (final ManuscriptBinding b in kBindings) ...<Widget>[
+            _BindingCard(
+              binding: b,
+              palette: p,
+              selected: b.key == binding.key,
+              onTap: () => ref.read(bindingProvider.notifier).select(b),
+            ),
+            if (b.key != kBindings.last.key) const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 30),
+
+          HairRule(palette: p, margin: const EdgeInsets.symmetric(vertical: 4)),
+          const SizedBox(height: 26),
+
+          MssLabel('Provenance', gold: binding.gold),
+          const SizedBox(height: 6),
+          Text(
+            'A shelf of your last dozen transcriptions, kept on this device.',
+            style: p.serif(TextStyle(fontSize: 12.5, color: p.muted)),
+          ),
+          const SizedBox(height: 14),
+          MssGhostButton(
+            label: 'Clear history',
+            palette: p,
+            leading: MssIcon('x', size: 14, color: p.ghostLabel),
+            onPressed: history.isEmpty
+                ? null
+                : () => ref.read(historyProvider.notifier).clear(),
+          ),
+        ],
+      ),
+    );
+
+    if (embedded) {
+      return ContentContainer(child: content);
+    }
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: p.isDark ? AppTheme.overlayStyle : AppTheme.overlayStyleLight,
       child: Scaffold(
         body: ManuscriptBackground(
           child: SafeArea(
-            child: ContentContainer(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(26, 28, 26, 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        SizedBox(
-                          width: 96,
-                          child: MssGhostButton(
-                            label: '‹  Back',
-                            palette: p,
-                            dense: true,
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Settings',
-                            textAlign: TextAlign.center,
-                            style: binding.display0(
-                                TextStyle(fontSize: 19, color: p.display)),
-                          ),
-                        ),
-                        const SizedBox(width: 96),
-                      ],
-                    ),
-                    const SizedBox(height: 28),
-                    Fleuron(glyph: binding.ornament == 2 ? '❧' : '✦', gold: binding.gold),
-                    const SizedBox(height: 30),
-
-                    MssLabel('Appearance', gold: binding.gold),
-                    const SizedBox(height: 12),
-                    _ThemeModeToggle(
-                      binding: binding,
-                      palette: p,
-                      value: mode,
-                      onChanged: (ThemeMode m) =>
-                          ref.read(themeModeProvider.notifier).set(m),
-                    ),
-                    const SizedBox(height: 30),
-
-                    HairRule(palette: p, margin: const EdgeInsets.symmetric(vertical: 4)),
-                    const SizedBox(height: 26),
-
-                    MssLabel('Binding', gold: binding.gold),
-                    const SizedBox(height: 6),
-                    Text(
-                      'The manuscript skin — colours, type, and ornament.',
-                      style: p.serif(TextStyle(fontSize: 12.5, color: p.muted)),
-                    ),
-                    const SizedBox(height: 14),
-                    for (final ManuscriptBinding b in kBindings) ...<Widget>[
-                      _BindingCard(
-                        binding: b,
-                        palette: p,
-                        selected: b.key == binding.key,
-                        onTap: () => ref.read(bindingProvider.notifier).select(b),
-                      ),
-                      if (b.key != kBindings.last.key) const SizedBox(height: 12),
-                    ],
-                    const SizedBox(height: 30),
-
-                    HairRule(palette: p, margin: const EdgeInsets.symmetric(vertical: 4)),
-                    const SizedBox(height: 26),
-
-                    MssLabel('History', gold: binding.gold),
-                    const SizedBox(height: 6),
-                    Text(
-                      'A shelf of your last dozen transcriptions, kept on this device.',
-                      style: p.serif(TextStyle(fontSize: 12.5, color: p.muted)),
-                    ),
-                    const SizedBox(height: 14),
-                    MssGhostButton(
-                      label: 'Clear history',
-                      palette: p,
-                      leading: MssIcon('x', size: 14, color: p.ghostLabel),
-                      onPressed: history.isEmpty
-                          ? null
-                          : () => ref.read(historyProvider.notifier).clear(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: ContentContainer(child: content),
           ),
         ),
       ),

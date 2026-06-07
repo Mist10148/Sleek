@@ -6,12 +6,10 @@ import '../../../../core/responsive/responsive.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/manuscript_theme.dart';
 import '../../../../core/theme/mss_palette.dart';
-import '../../../settings/presentation/settings_screen.dart';
 import '../providers/conversion_state.dart';
 import '../providers/converter_controller.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/manuscript/manuscript_background.dart';
-import '../widgets/manuscript/mss_icons.dart';
 import 'done_screen.dart';
 import 'downloading_screen.dart';
 import 'input_screen.dart';
@@ -50,63 +48,39 @@ class HomeScreen extends ConsumerWidget {
       child: Scaffold(
         body: ManuscriptBackground(
           child: SafeArea(
-            child: Stack(
-              children: <Widget>[
-                ContentContainer(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 460),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      // A leaf of vellum settling onto the desk: the
-                      // outgoing phase eases down and away while the
-                      // incoming one rises softly into place, brightening
-                      // and growing to rest — a quiet "turn of the page"
-                      // rather than a flat cross-fade.
-                      transitionBuilder: (Widget child, Animation<double> a) {
-                        return FadeTransition(
-                          opacity: a,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.045),
-                              end: Offset.zero,
-                            ).animate(a),
-                            child: ScaleTransition(
-                              scale: Tween<double>(begin: 0.982, end: 1.0).animate(a),
-                              child: child,
-                            ),
-                          ),
-                        );
-                      },
-                      child: KeyedSubtree(
-                        key: ValueKey<String>('${state.stage}_${binding.key}'),
-                        child: _phase(binding, palette, state),
+            child: ContentContainer(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 460),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  // A leaf of vellum settling onto the desk: the
+                  // outgoing phase eases down and away while the
+                  // incoming one rises softly into place, brightening
+                  // and growing to rest — a quiet "turn of the page"
+                  // rather than a flat cross-fade.
+                  transitionBuilder: (Widget child, Animation<double> a) {
+                    return FadeTransition(
+                      opacity: a,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.045),
+                          end: Offset.zero,
+                        ).animate(a),
+                        child: ScaleTransition(
+                          scale: Tween<double>(begin: 0.982, end: 1.0).animate(a),
+                          child: child,
+                        ),
                       ),
-                    ),
+                    );
+                  },
+                  child: KeyedSubtree(
+                    key: ValueKey<String>('${state.stage}_${binding.key}'),
+                    child: _phase(binding, palette, state),
                   ),
                 ),
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Material(
-                    color: Colors.transparent,
-                    shape: const CircleBorder(),
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute<void>(
-                            builder: (_) => const SettingsScreen()),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: MssIcon('gear', size: 20, color: palette.faint),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

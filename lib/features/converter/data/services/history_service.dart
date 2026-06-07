@@ -22,6 +22,8 @@ class HistoryEntry {
     required this.filePath,
     required this.thumbnailUrl,
     required this.completedAt,
+    this.author = '',
+    this.duration,
   });
 
   final String title;
@@ -36,6 +38,12 @@ class HistoryEntry {
   final String thumbnailUrl;
   final DateTime completedAt;
 
+  /// The uploading channel/artist, shown as the "artist" line in the library.
+  final String author;
+
+  /// The source video's runtime, used for the scrubber's total duration.
+  final Duration? duration;
+
   Map<String, Object?> toJson() => <String, Object?>{
         'title': title,
         'format': format.name,
@@ -43,6 +51,8 @@ class HistoryEntry {
         'filePath': filePath,
         'thumbnailUrl': thumbnailUrl,
         'completedAt': completedAt.toIso8601String(),
+        'author': author,
+        'durationMs': duration?.inMilliseconds,
       };
 
   /// Returns `null` for anything malformed rather than throwing — one
@@ -50,6 +60,7 @@ class HistoryEntry {
   static HistoryEntry? tryFromJson(Object? json) {
     if (json is! Map) return null;
     try {
+      final Object? durationMs = json['durationMs'];
       return HistoryEntry(
         title: json['title'] as String,
         format: MediaFormat.values.byName(json['format'] as String),
@@ -57,6 +68,8 @@ class HistoryEntry {
         filePath: json['filePath'] as String,
         thumbnailUrl: json['thumbnailUrl'] as String? ?? '',
         completedAt: DateTime.parse(json['completedAt'] as String),
+        author: json['author'] as String? ?? '',
+        duration: durationMs is int ? Duration(milliseconds: durationMs) : null,
       );
     } catch (_) {
       return null;

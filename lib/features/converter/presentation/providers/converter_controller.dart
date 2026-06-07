@@ -161,6 +161,8 @@ class ConverterController extends Notifier<ConversionState> {
             filePath: result.filePath,
             thumbnailUrl: info.thumbnailUrl,
             completedAt: DateTime.now(),
+            author: info.author,
+            duration: info.duration,
           ));
     } catch (_) {
       // The file landed — that's what actually matters.

@@ -11,6 +11,9 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
+    <!-- Lets the in-app player detect & play music already on the device
+         (Android 13+ granular media permission for audio). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
 
     <application
         android:label="Sleek"
