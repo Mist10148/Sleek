@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/manuscript_theme.dart';
+import '../../../../../core/theme/mss_palette.dart';
 import 'mss_icons.dart';
 
 /// The masthead: a quill seal, the SLEEK wordmark, and a small-caps subtitle.
 /// `small` drops the seal + subtitle (used on loading/downloading screens).
-/// Equivalent to the `Crest` component in the design's `Downloader.jsx`.
 class Crest extends StatelessWidget {
-  const Crest({super.key, required this.binding, this.small = false});
+  const Crest({super.key, required this.binding, required this.palette, this.small = false});
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final bool small;
 
   @override
   Widget build(BuildContext context) {
+    final MssPalette p = palette;
     return Column(
       children: <Widget>[
         SizedBox(height: small ? 6 : 14),
@@ -28,12 +30,12 @@ class Crest extends StatelessWidget {
             fontSize: small ? 21 : 30,
             fontWeight: FontWeight.w500,
             letterSpacing: (small ? 21 : 30) * 0.14,
-            color: Mss.display,
+            color: p.display,
           )),
         ),
         if (!small) ...<Widget>[
           const SizedBox(height: 7),
-          Text(AppConstants.appTagline, style: Mss.label(binding.gold)),
+          Text(AppConstants.appTagline, style: p.label(binding.gold)),
         ],
       ],
     );

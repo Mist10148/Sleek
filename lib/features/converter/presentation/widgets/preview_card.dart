@@ -1,38 +1,43 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/models/video_info.dart';
 import 'manuscript/mss_icons.dart';
 import 'manuscript/ornaments.dart';
 
-/// The video "Record" card: a sepia-treated real thumbnail with a play glyph and
-/// duration badge, then title + channel/views/duration. Gains gilt borders +
-/// corner flourishes (illuminated) and a "REF" ink stamp (folio). Ported from
-/// the preview card in the design's `Downloader.jsx`.
+/// The video "Record" card: a sepia-treated thumbnail with play glyph and
+/// duration badge, then title + channel/views/duration.
 class PreviewCard extends StatelessWidget {
-  const PreviewCard({super.key, required this.binding, required this.info});
+  const PreviewCard({
+    super.key,
+    required this.binding,
+    required this.palette,
+    required this.info,
+  });
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final VideoInfo info;
 
-  // Warm sepia color matrix applied over the real thumbnail.
   static const List<double> _sepia = <double>[
-    0.393, 0.769, 0.189, 0, -18, //
-    0.349, 0.686, 0.168, 0, -12, //
-    0.272, 0.534, 0.131, 0, -8, //
+    0.393, 0.769, 0.189, 0, -18,
+    0.349, 0.686, 0.168, 0, -12,
+    0.272, 0.534, 0.131, 0, -8,
     0, 0, 0, 1, 0,
   ];
 
   @override
   Widget build(BuildContext context) {
+    final MssPalette p = palette;
     final bool gilt = binding.ornament == 2;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x99140F0A),
+        color: p.cardBg,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-            color: gilt ? const Color(0x80CBA86A) : Mss.rule(0.24)),
+            color: gilt ? const Color(0x80CBA86A) : p.rule(0.24)),
         boxShadow: gilt
             ? <BoxShadow>[
                 BoxShadow(
@@ -54,9 +59,9 @@ class PreviewCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                _title(),
+                _title(p),
                 const SizedBox(height: 9),
-                _meta(),
+                _meta(p),
               ],
             ),
           ),
@@ -71,7 +76,6 @@ class PreviewCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: <Widget>[
-          // Warm manuscript base (shows through while the image loads / fails).
           const DecoratedBox(
             decoration: BoxDecoration(
               gradient: RadialGradient(
@@ -91,7 +95,6 @@ class PreviewCard extends StatelessWidget {
                   const SizedBox.shrink(),
             ),
           ),
-          // Warm multiply wash to seat the image in the palette.
           DecoratedBox(
             decoration: BoxDecoration(
               backgroundBlendMode: BlendMode.multiply,
@@ -120,9 +123,9 @@ class PreviewCard extends StatelessWidget {
         border: Border.all(color: const Color(0xB3F1E7D4), width: 1.5),
       ),
       alignment: Alignment.center,
-      child: const Padding(
-        padding: EdgeInsets.only(left: 3),
-        child: MssIcon('play', size: 18, color: Mss.display),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 3),
+        child: MssIcon('play', size: 18, color: palette.display),
       ),
     );
   }
@@ -133,11 +136,11 @@ class PreviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xD108_0503),
+        color: const Color(0xD1080503),
         borderRadius: BorderRadius.circular(3),
       ),
       child: Text(d,
-          style: Mss.mono(const TextStyle(fontSize: 10.5, color: Color(0xFFEDE0C8)))),
+          style: palette.mono(const TextStyle(fontSize: 10.5, color: Color(0xFFEDE0C8)))),
     );
   }
 
@@ -154,43 +157,42 @@ class PreviewCard extends StatelessWidget {
             border: Border.all(color: const Color(0x8CF1E7D4), width: 1.5),
           ),
           child: Text('REF · ML-410.7',
-              style: Mss.mono(const TextStyle(
+              style: palette.mono(const TextStyle(
                   fontSize: 8.5, letterSpacing: 1, color: Color(0xBFF1E7D4)))),
         ),
       ),
     );
   }
 
-  Widget _title() {
-    final TextStyle base = binding.display0(const TextStyle(
-        fontSize: 17.5, height: 1.32, fontWeight: FontWeight.w500, color: Mss.display));
+  Widget _title(MssPalette p) {
+    final TextStyle base = binding.display0(TextStyle(
+        fontSize: 17.5, height: 1.32, fontWeight: FontWeight.w500, color: p.display));
     if (binding.dropcap) {
-      return _DropCapText(text: info.title, style: base, accent: binding.accent,
-          displayFont: binding);
+      return _DropCapText(
+          text: info.title, style: base, accent: binding.accent, displayFont: binding);
     }
     return Text(info.title, style: base);
   }
 
-  Widget _meta() {
-    final TextStyle s =
-        Mss.serif(const TextStyle(fontSize: 13, color: Mss.muted));
+  Widget _meta(MssPalette p) {
+    final TextStyle s = p.serif(TextStyle(fontSize: 13, color: p.muted));
     return Wrap(
       spacing: 8,
       runSpacing: 4,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: <Widget>[
         Text(info.author,
-            style: Mss.serif(TextStyle(fontSize: 13, color: binding.gold))),
-        Text('·', style: const TextStyle(color: Mss.faint)),
+            style: p.serif(TextStyle(fontSize: 13, color: binding.gold))),
+        Text('·', style: TextStyle(color: p.faint)),
         Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-          MssIcon('eye', size: 12, color: Mss.muted),
+          MssIcon('eye', size: 12, color: p.muted),
           const SizedBox(width: 4),
           Text('Watch', style: s),
         ]),
         if (info.duration != null) ...<Widget>[
-          Text('·', style: const TextStyle(color: Mss.faint)),
+          Text('·', style: TextStyle(color: p.faint)),
           Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            MssIcon('clock', size: 12, color: Mss.muted),
+            MssIcon('clock', size: 12, color: p.muted),
             const SizedBox(width: 4),
             Text(Formatters.duration(info.duration!), style: s),
           ]),
@@ -200,7 +202,6 @@ class PreviewCard extends StatelessWidget {
   }
 }
 
-/// Title with an illuminated drop-cap first letter.
 class _DropCapText extends StatelessWidget {
   const _DropCapText({
     required this.text,

@@ -17,9 +17,9 @@ class AppFailure implements Exception {
 class Failures {
   Failures._();
 
-  static AppFailure network([Object? cause]) =>
-      AppFailure('Network problem. Check your connection and try again.',
-          cause: cause);
+  static AppFailure network([Object? cause]) => AppFailure(
+      'Network problem. Check your connection and try again.${_causeDetail(cause)}',
+      cause: cause);
 
   static AppFailure videoUnavailable([Object? cause]) => AppFailure(
       'This video is unavailable or restricted.',
@@ -33,6 +33,14 @@ class Failures {
       'No matching stream was found for the selected quality.',
       cause: cause);
 
-  static AppFailure unknown([Object? cause]) =>
-      AppFailure('Something went wrong. Please try again.', cause: cause);
+  static AppFailure unknown([Object? cause]) => AppFailure(
+      'Something went wrong. Please try again.${_causeDetail(cause)}',
+      cause: cause);
+
+  static String _causeDetail(Object? cause) {
+    if (cause == null) return '';
+    final String s = cause.toString();
+    final String trimmed = s.length > 120 ? '${s.substring(0, 120)}…' : s;
+    return '\n($trimmed)';
+  }
 }

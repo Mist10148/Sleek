@@ -1,7 +1,14 @@
+import 'dart:async';
 import 'dart:io';
 
 import '../../../../core/errors/failures.dart';
 import '../models/download_task.dart';
+
+/// How long we'll wait for a chunk of bytes before deciding the connection is
+/// dead. YouTube's adaptive-audio URLs sometimes resolve fine but then never
+/// actually deliver data (a stalled/throttled connection rather than an
+/// outright error) — without a watchdog the UI would sit at "0%" forever.
+const Duration _kStallTimeout = Duration(seconds: 20);
 
 /// Streams bytes from a source [Stream] to a file on disk, emitting
 /// [DownloadProgress] as it goes. Pure I/O — it knows nothing about YouTube,
@@ -24,7 +31,13 @@ class DownloadService {
     DateTime lastEmit = DateTime.fromMillisecondsSinceEpoch(0);
 
     try {
-      await for (final List<int> chunk in source) {
+      await for (final List<int> chunk in source.timeout(
+        _kStallTimeout,
+        onTimeout: (EventSink<List<int>> sink) {
+          sink.addError(TimeoutException(
+              'No data received for ${_kStallTimeout.inSeconds}s — connection stalled.'));
+        },
+      )) {
         sink.add(chunk);
         received += chunk.length;
 

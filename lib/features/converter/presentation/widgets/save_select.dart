@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 import 'manuscript/mss_icons.dart';
 
 /// A save destination: a friendly [name] and its filesystem [path].
@@ -11,14 +12,13 @@ class SaveLocation {
   final String path;
 }
 
-/// Custom "Save To" dropdown (`.mss-select` + `.mss-menu`). The menu is a true
-/// floating overlay anchored to the button via [OverlayPortal] +
-/// [CompositedTransformFollower], so it draws above sibling content and
-/// dismisses on an outside tap. Lists [presets] plus "Browse for a folder…".
+/// Custom "Save To" dropdown. The menu is a true floating overlay anchored to
+/// the button via [OverlayPortal] + [CompositedTransformFollower].
 class SaveSelect extends StatefulWidget {
   const SaveSelect({
     super.key,
     required this.binding,
+    required this.palette,
     required this.current,
     required this.presets,
     required this.onSelect,
@@ -26,6 +26,7 @@ class SaveSelect extends StatefulWidget {
   });
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final SaveLocation current;
   final List<SaveLocation> presets;
   final ValueChanged<SaveLocation> onSelect;
@@ -71,14 +72,15 @@ class _SaveSelectState extends State<SaveSelect> {
   }
 
   Widget _button(ManuscriptBinding b) {
+    final MssPalette p = widget.palette;
     return GestureDetector(
       onTap: _toggle,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
-          color: const Color(0x800C0906),
+          color: p.overlay50,
           borderRadius: BorderRadius.circular(5),
-          border: Border.all(color: _open ? b.accent : Mss.rule(0.26)),
+          border: Border.all(color: _open ? b.accent : p.rule(0.26)),
           boxShadow: _open
               ? <BoxShadow>[
                   BoxShadow(color: b.accentSoft, spreadRadius: 3, blurRadius: 0)
@@ -96,21 +98,21 @@ class _SaveSelectState extends State<SaveSelect> {
                   Text(widget.current.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Mss.serif(const TextStyle(
-                          fontSize: 14.5, color: Color(0xFFEDE0C8)))),
+                      style: p.serif(TextStyle(
+                          fontSize: 14.5, color: p.display))),
                   const SizedBox(height: 2),
                   Text(widget.current.path,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Mss.mono(
-                          const TextStyle(fontSize: 10.5, color: Mss.faint))),
+                      style: p.mono(
+                          TextStyle(fontSize: 10.5, color: p.faint))),
                 ],
               ),
             ),
             AnimatedRotation(
               turns: _open ? 0.5 : 0,
               duration: const Duration(milliseconds: 200),
-              child: MssIcon('chevron', size: 15, color: Mss.faint),
+              child: MssIcon('chevron', size: 15, color: p.faint),
             ),
           ],
         ),
@@ -122,7 +124,6 @@ class _SaveSelectState extends State<SaveSelect> {
     final ManuscriptBinding b = widget.binding;
     return Stack(
       children: <Widget>[
-        // Full-screen barrier to dismiss on an outside tap.
         Positioned.fill(
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
@@ -159,13 +160,14 @@ class _SaveSelectState extends State<SaveSelect> {
   }
 
   Widget _menu(ManuscriptBinding b) {
+    final MssPalette p = widget.palette;
     return Material(
       color: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1D1710),
+          color: p.menuBg,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Mss.rule(0.3)),
+          border: Border.all(color: p.rule(0.3)),
           boxShadow: <BoxShadow>[
             BoxShadow(
                 color: Colors.black.withValues(alpha: 0.6),
@@ -180,7 +182,7 @@ class _SaveSelectState extends State<SaveSelect> {
           children: <Widget>[
             for (final SaveLocation l in widget.presets)
               _row(
-                b,
+                b, p,
                 label: l.name,
                 selected: l.path == widget.current.path,
                 onTap: () {
@@ -189,7 +191,7 @@ class _SaveSelectState extends State<SaveSelect> {
                 },
               ),
             _row(
-              b,
+              b, p,
               label: 'Browse for a folder…',
               sep: true,
               trailing: Text('›', style: TextStyle(fontSize: 15, color: b.accent)),
@@ -205,7 +207,8 @@ class _SaveSelectState extends State<SaveSelect> {
   }
 
   Widget _row(
-    ManuscriptBinding b, {
+    ManuscriptBinding b,
+    MssPalette p, {
     required String label,
     required VoidCallback onTap,
     bool selected = false,
@@ -218,13 +221,13 @@ class _SaveSelectState extends State<SaveSelect> {
       child: Container(
         decoration: sep
             ? BoxDecoration(
-                border: Border(top: BorderSide(color: Mss.rule(0.18))))
+                border: Border(top: BorderSide(color: p.rule(0.18))))
             : null,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: <Widget>[
             MssIcon('folder',
-                size: 16, color: sep ? b.accent : const Color(0xFFD7C8AC)),
+                size: 16, color: sep ? b.accent : p.menuItem),
             const SizedBox(width: 11),
             Expanded(
               child: Text(label,
@@ -233,7 +236,7 @@ class _SaveSelectState extends State<SaveSelect> {
                   style: GoogleFonts.ebGaramond(
                       textStyle: TextStyle(
                           fontSize: 14,
-                          color: sep ? b.accent : const Color(0xFFD7C8AC)))),
+                          color: sep ? b.accent : p.menuItem))),
             ),
             if (selected) MssIcon('check', size: 16, color: b.accent),
             ?trailing,

@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
+import 'features/converter/presentation/providers/theme_provider.dart';
 import 'features/converter/presentation/screens/home_screen.dart';
 
-class YtConverterApp extends StatelessWidget {
+class YtConverterApp extends ConsumerWidget {
   const YtConverterApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ThemeMode themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       home: const HomeScreen(),
     );
   }

@@ -5,6 +5,7 @@ import '../../data/models/download_task.dart';
 import '../../data/repositories/converter_repository.dart';
 import '../../data/services/conversion_service.dart';
 import '../../data/services/download_service.dart';
+import '../../data/services/history_service.dart';
 import '../../data/services/storage_service.dart';
 import '../../data/services/youtube_service.dart';
 import '../../domain/entities/conversion_request.dart';
@@ -132,8 +133,37 @@ class ConverterController extends Notifier<ConversionState> {
         onProgress: (p) => state = state.copyWith(progress: p),
       );
       state = state.copyWith(stage: ConversionStage.done, result: result);
+      await _recordHistory(quality: quality, result: result);
     } catch (e) {
       _fail(e);
+    }
+  }
+
+  /// Leaves a small receipt on the "Recently Transcribed" shelf — the exact
+  /// `qualityLabel` shape `DoneScreen` already renders (`"192 kbps"` /
+  /// `"720p"`), so the two always agree. Guarded in its own try/catch: a
+  /// shelf that fails to save is a shrug, not a reason to paint a finished,
+  /// successful conversion as an error.
+  Future<void> _recordHistory({
+    required QualityOption quality,
+    required DownloadResult result,
+  }) async {
+    final info = state.info;
+    if (info == null) return;
+    try {
+      final String qualityLabel = state.format == MediaFormat.mp4
+          ? '${quality.q}p'
+          : '${quality.q} kbps';
+      await ref.read(historyProvider.notifier).add(HistoryEntry(
+            title: info.title,
+            format: state.format,
+            qualityLabel: qualityLabel,
+            filePath: result.filePath,
+            thumbnailUrl: info.thumbnailUrl,
+            completedAt: DateTime.now(),
+          ));
+    } catch (_) {
+      // The file landed — that's what actually matters.
     }
   }
 

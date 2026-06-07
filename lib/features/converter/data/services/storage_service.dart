@@ -72,11 +72,21 @@ class StorageService {
     return trimmed.isEmpty ? 'audio_video' : trimmed;
   }
 
-  /// Verifies a chosen directory exists and is writable.
+  /// Verifies a chosen directory exists and is actually writable by creating and
+  /// immediately deleting a probe file.
   Future<void> assertWritable(String directory) async {
     final Directory dir = Directory(directory);
     if (!await dir.exists()) {
       throw Failures.permissionDenied('Directory does not exist: $directory');
+    }
+    final File probe = File(
+      '$directory${Platform.pathSeparator}.sleek_probe_${DateTime.now().millisecondsSinceEpoch}',
+    );
+    try {
+      await probe.writeAsBytes(<int>[0]);
+      await probe.delete();
+    } catch (_) {
+      throw Failures.permissionDenied('Cannot write to directory: $directory');
     }
   }
 }

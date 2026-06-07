@@ -2,22 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 
 /// The downloading meter: a big percent numeral, a marching-stripe progress bar,
-/// and a three-up stat grid (Elapsed / Remaining / MB per sec). Ported from the
-/// downloading screen in the design's `Downloader.jsx`.
+/// and a three-up stat grid (Elapsed / Remaining / MB per sec).
 class ProgressMeter extends StatelessWidget {
   const ProgressMeter({
     super.key,
     required this.binding,
+    required this.palette,
     required this.pct,
     required this.sizeLine,
     required this.elapsed,
     required this.remaining,
     required this.speed,
+    this.speedLabel = 'MB / sec',
   });
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
 
   /// 0–100.
   final double pct;
@@ -26,8 +29,14 @@ class ProgressMeter extends StatelessWidget {
   final String remaining;
   final String speed;
 
+  /// Caption under the third stat — swappable so phases that don't move
+  /// bytes (e.g. ffmpeg re-encoding, reported as "× realtime") can still use
+  /// this same meter honestly instead of mislabelling their own units.
+  final String speedLabel;
+
   @override
   Widget build(BuildContext context) {
+    final MssPalette p = palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -37,64 +46,64 @@ class ProgressMeter extends StatelessWidget {
           textBaseline: TextBaseline.alphabetic,
           children: <Widget>[
             Text('${pct.floor()}',
-                style: Mss.mono(const TextStyle(
-                    fontSize: 52, height: 1, color: Mss.display))),
+                style: p.mono(TextStyle(
+                    fontSize: 52, height: 1, color: p.display))),
             const SizedBox(width: 4),
             Text('%',
-                style: Mss.mono(TextStyle(fontSize: 22, color: binding.accent))),
+                style: p.mono(TextStyle(fontSize: 22, color: binding.accent))),
           ],
         ),
         const SizedBox(height: 8),
         Center(
           child: Text(sizeLine,
-              style: Mss.mono(const TextStyle(fontSize: 11.5, color: Mss.faint))),
+              style: p.mono(TextStyle(fontSize: 11.5, color: p.faint))),
         ),
         const SizedBox(height: 26),
-        _MarchingBar(binding: binding, value: (pct / 100).clamp(0, 1)),
+        _MarchingBar(binding: binding, palette: p, value: (pct / 100).clamp(0, 1)),
         const SizedBox(height: 26),
-        _statGrid(),
+        _statGrid(p),
       ],
     );
   }
 
-  Widget _statGrid() {
+  Widget _statGrid(MssPalette p) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Mss.rule(0.2)),
+        border: Border.all(color: p.rule(0.2)),
       ),
       clipBehavior: Clip.antiAlias,
       child: IntrinsicHeight(
         child: Row(
           children: <Widget>[
-            _stat(elapsed, 'Elapsed', divider: true),
-            _stat(remaining, 'Remaining', divider: true),
-            _stat(speed, 'MB / sec', divider: false),
+            _stat(p, elapsed, 'Elapsed', divider: true),
+            _stat(p, remaining, 'Remaining', divider: true),
+            _stat(p, speed, speedLabel, divider: false),
           ],
         ),
       ),
     );
   }
 
-  Widget _stat(String value, String key, {required bool divider}) {
+  Widget _stat(MssPalette p, String value, String key, {required bool divider}) {
     return Expanded(
       child: Container(
         decoration: divider
             ? BoxDecoration(
-                border: Border(right: BorderSide(color: Mss.rule(0.14))))
+                border: Border(right: BorderSide(color: p.rule(0.14))))
             : null,
         padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 8),
         child: Column(
           children: <Widget>[
             Text(value,
-                style: Mss.mono(const TextStyle(fontSize: 14, color: Mss.display))),
+                style: p.mono(TextStyle(fontSize: 14, color: p.display))),
             const SizedBox(height: 3),
             Text(key.toUpperCase(),
                 style: GoogleFonts.spectral(
-                    textStyle: const TextStyle(
+                    textStyle: TextStyle(
                         fontSize: 9,
                         letterSpacing: 1.8,
-                        color: Color(0xFF8A7D65)))),
+                        color: p.muted))),
           ],
         ),
       ),
@@ -104,8 +113,9 @@ class ProgressMeter extends StatelessWidget {
 
 /// Progress track with an animated diagonal-stripe fill (`.mss-prog`).
 class _MarchingBar extends StatefulWidget {
-  const _MarchingBar({required this.binding, required this.value});
+  const _MarchingBar({required this.binding, required this.palette, required this.value});
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final double value;
 
   @override
@@ -127,12 +137,13 @@ class _MarchingBarState extends State<_MarchingBar>
   @override
   Widget build(BuildContext context) {
     final ManuscriptBinding b = widget.binding;
+    final MssPalette p = widget.palette;
     return Container(
       height: 9,
       decoration: BoxDecoration(
-        color: const Color(0x990C0906),
+        color: p.barBg,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Mss.rule(0.22)),
+        border: Border.all(color: p.rule(0.22)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Align(
@@ -161,13 +172,11 @@ class _StripePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Rect r = Offset.zero & size;
-    // base gradient
     canvas.drawRect(
       r,
       Paint()
         ..shader = LinearGradient(colors: <Color>[base0, base1]).createShader(r),
     );
-    // marching diagonal stripes
     final Paint stripe = Paint()..color = Colors.white.withValues(alpha: 0.16);
     const double period = 14;
     final double off = phase * period;

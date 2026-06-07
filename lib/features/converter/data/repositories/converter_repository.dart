@@ -41,6 +41,8 @@ class ConverterRepository {
     required VideoInfo info,
     required void Function(DownloadProgress progress) onProgress,
   }) async {
+    final bool allowed = await _storage.ensureWritePermission();
+    if (!allowed) throw Failures.permissionDenied();
     await _storage.assertWritable(request.outputDirectoryPath);
     final Stopwatch total = Stopwatch()..start();
 
@@ -68,19 +70,53 @@ class ConverterRepository {
     }
 
     // MP3: download source audio to a temp file, then convert.
-    final String tempPath =
-        '$finalPath.${_youtube.containerOf(stream)}.part';
-    await _download.download(
-      source: _youtube.openStream(stream),
-      totalBytes: _youtube.sizeOf(stream),
-      outputPath: tempPath,
-      onProgress: onProgress,
-    );
+    StreamInfo audioStream = stream;
+    String tempPath = '$finalPath.${_youtube.containerOf(audioStream)}.part';
+    try {
+      await _download.download(
+        source: _youtube.openStream(audioStream),
+        totalBytes: _youtube.sizeOf(audioStream),
+        outputPath: tempPath,
+        onProgress: onProgress,
+      );
+    } catch (error) {
+      // This one specific stream's URL can still be dead at fetch time even
+      // though manifest resolution succeeded. Clean up the failed attempt
+      // and retry once with a *different* muxed quality — still the same
+      // reliable stream type the MP4 path uses, just a different pick.
+      final File partial = File(tempPath);
+      if (await partial.exists()) await partial.delete();
 
+      final StreamInfo? fallback = await _youtube.alternateMuxedStream(
+        info.id,
+        excludeTag: audioStream.tag,
+      );
+      if (fallback == null) rethrow;
+
+      audioStream = fallback;
+      tempPath = '$finalPath.${_youtube.containerOf(audioStream)}.part';
+      await _download.download(
+        source: _youtube.openStream(audioStream),
+        totalBytes: _youtube.sizeOf(audioStream),
+        outputPath: tempPath,
+        onProgress: onProgress,
+      );
+    }
+
+    // A fresh stopwatch for the second phase — the elapsed time shown during
+    // conversion should reflect how long *encoding* has taken, not carry over
+    // the download phase's clock.
+    final Stopwatch convertStopwatch = Stopwatch()..start();
     final String produced = await _conversion.convertToMp3(
       sourcePath: tempPath,
       outputPath: finalPath,
       targetBitrateKbps: request.quality.bitrateKbps ?? 192,
+      sourceDuration: info.duration,
+      onProgress: (double fraction) => onProgress(DownloadProgress.fromFraction(
+        fraction: fraction,
+        elapsed: convertStopwatch.elapsed,
+        phase: ConversionPhase.converting,
+      )),
     );
 
     final int size = await File(produced).length();

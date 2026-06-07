@@ -50,7 +50,35 @@ class Formatters {
     return duration(Duration(seconds: remainingSeconds.round()));
   }
 
+  /// Estimated time remaining derived from overall progress as a 0–1 ratio
+  /// and how long it took to get there — for phases (like ffmpeg re-encoding)
+  /// that report a direct fraction rather than a byte count to divide.
+  static String etaFromFraction(double fraction, Duration elapsed) {
+    if (fraction <= 0 || elapsed.inMilliseconds <= 0) return '—';
+    if (fraction >= 1) return '0:00';
+    final double totalMs = elapsed.inMilliseconds / fraction;
+    return duration(
+        Duration(milliseconds: (totalMs - elapsed.inMilliseconds).round()));
+  }
+
   /// Percentage label, e.g. `73%`.
   static String percent(double fraction) =>
       '${(fraction.clamp(0, 1) * 100).round()}%';
+
+  /// A gentle relative timestamp for the history shelf — `Just now`, `12m
+  /// ago`, `Yesterday`, `5d ago`, fading to a bare date once it's far enough
+  /// in the past that counting stops being useful.
+  static String timeAgo(DateTime when) {
+    final Duration since = DateTime.now().difference(when);
+    if (since.inMinutes < 1) return 'Just now';
+    if (since.inMinutes < 60) return '${since.inMinutes}m ago';
+    if (since.inHours < 24) return '${since.inHours}h ago';
+    if (since.inDays == 1) return 'Yesterday';
+    if (since.inDays < 7) return '${since.inDays}d ago';
+    const List<String> months = <String>[
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${when.day} ${months[when.month - 1]}';
+  }
 }

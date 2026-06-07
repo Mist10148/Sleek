@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../../core/theme/manuscript_theme.dart';
+import '../../../../../core/theme/mss_palette.dart';
 
 /// Small-caps gold label (`.mss-label`).
 class MssLabel extends StatelessWidget {
@@ -20,6 +21,7 @@ class MssField extends StatefulWidget {
     super.key,
     required this.controller,
     required this.binding,
+    required this.palette,
     required this.hintText,
     this.onChanged,
     this.onSubmitted,
@@ -27,6 +29,7 @@ class MssField extends StatefulWidget {
 
   final TextEditingController controller;
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final String hintText;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onSubmitted;
@@ -54,13 +57,14 @@ class _MssFieldState extends State<MssField> {
   Widget build(BuildContext context) {
     final bool focused = _focus.hasFocus;
     final ManuscriptBinding b = widget.binding;
+    final MssPalette p = widget.palette;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
-        color: const Color(0xCC0C0906),
+        color: p.fieldBg,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: focused ? b.accent : Mss.rule(0.26),
+          color: focused ? b.accent : p.rule(0.26),
         ),
         boxShadow: focused
             ? <BoxShadow>[BoxShadow(color: b.accentSoft, blurRadius: 0, spreadRadius: 3)]
@@ -74,11 +78,11 @@ class _MssFieldState extends State<MssField> {
         minLines: 2,
         cursorColor: b.accent,
         keyboardType: TextInputType.url,
-        style: Mss.mono(const TextStyle(
-            fontSize: 12.5, letterSpacing: -0.25, color: Mss.display, height: 1.3)),
+        style: p.mono(TextStyle(
+            fontSize: 12.5, letterSpacing: -0.25, color: p.display, height: 1.3)),
         decoration: InputDecoration.collapsed(
           hintText: widget.hintText,
-          hintStyle: Mss.mono(const TextStyle(fontSize: 12.5, color: Color(0xFF6F6450))),
+          hintStyle: p.mono(TextStyle(fontSize: 12.5, color: p.hintColor)),
         ),
         onChanged: widget.onChanged,
         onSubmitted: (_) => widget.onSubmitted?.call(),
@@ -92,6 +96,7 @@ class MssPrimaryButton extends StatelessWidget {
   const MssPrimaryButton({
     super.key,
     required this.binding,
+    required this.palette,
     required this.label,
     this.trailing,
     this.leading,
@@ -99,6 +104,7 @@ class MssPrimaryButton extends StatelessWidget {
   });
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final String label;
   final Widget? trailing;
   final Widget? leading;
@@ -140,11 +146,11 @@ class MssPrimaryButton extends StatelessWidget {
                 child: Text(
                   label,
                   style: GoogleFonts.spectral(
-                      textStyle: const TextStyle(
+                      textStyle: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.3,
-                          color: Mss.ink)),
+                          color: palette.ink)),
                 ),
               ),
               if (trailing != null) ...<Widget>[const SizedBox(width: 9), trailing!],
@@ -161,18 +167,21 @@ class MssGhostButton extends StatelessWidget {
   const MssGhostButton({
     super.key,
     required this.label,
+    required this.palette,
     this.leading,
     this.onPressed,
     this.dense = false,
   });
 
   final String label;
+  final MssPalette palette;
   final Widget? leading;
   final VoidCallback? onPressed;
   final bool dense;
 
   @override
   Widget build(BuildContext context) {
+    final MssPalette p = palette;
     return _Pressable(
       onPressed: onPressed,
       child: Container(
@@ -180,7 +189,7 @@ class MssGhostButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: dense ? 9 : 13),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          border: Border.all(color: Mss.rule(0.3)),
+          border: Border.all(color: p.rule(0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -190,10 +199,10 @@ class MssGhostButton extends StatelessWidget {
               child: Text(
                 label,
                 style: GoogleFonts.spectral(
-                    textStyle: const TextStyle(
+                    textStyle: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFFC9B999))),
+                        color: p.ghostLabel)),
               ),
             ),
           ],
@@ -203,7 +212,7 @@ class MssGhostButton extends StatelessWidget {
   }
 }
 
-/// Press-down micro-interaction shared by the buttons (`.mss-btn:active`).
+/// Press-down micro-interaction shared by the buttons.
 class _Pressable extends StatefulWidget {
   const _Pressable({required this.child, this.onPressed});
   final Widget child;

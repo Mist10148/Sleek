@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 import '../../domain/entities/media_format.dart';
 import 'manuscript/mss_icons.dart';
 import 'manuscript/ornaments.dart';
@@ -8,8 +9,9 @@ import 'manuscript/ornaments.dart';
 /// The pop-in success seal (`.mss-done-seal`) — a filled accent disc with a
 /// check that springs in with an elastic scale.
 class DoneSeal extends StatefulWidget {
-  const DoneSeal({super.key, required this.binding});
+  const DoneSeal({super.key, required this.binding, required this.palette});
   final ManuscriptBinding binding;
+  final MssPalette palette;
 
   @override
   State<DoneSeal> createState() => _DoneSealState();
@@ -47,7 +49,7 @@ class _DoneSealState extends State<DoneSeal>
           ],
         ),
         alignment: Alignment.center,
-        child: const MssIcon('check', size: 30, color: Mss.ink),
+        child: MssIcon('check', size: 30, color: widget.palette.ink),
       ),
     );
   }
@@ -58,6 +60,7 @@ class ReceiptCard extends StatelessWidget {
   const ReceiptCard({
     super.key,
     required this.binding,
+    required this.palette,
     required this.fileName,
     required this.format,
     required this.qualityLabel,
@@ -66,6 +69,7 @@ class ReceiptCard extends StatelessWidget {
   });
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final String fileName;
   final MediaFormat format;
   final String qualityLabel;
@@ -75,12 +79,13 @@ class ReceiptCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ManuscriptBinding b = binding;
+    final MssPalette p = palette;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       decoration: BoxDecoration(
-        color: const Color(0x99140F0A),
+        color: p.cardBg,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Mss.rule(0.24)),
+        border: Border.all(color: p.rule(0.24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,7 +98,7 @@ class ReceiptCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(5),
                   color: b.accentSoft,
-                  border: Border.all(color: Mss.rule(0.3)),
+                  border: Border.all(color: p.rule(0.3)),
                 ),
                 alignment: Alignment.center,
                 child: MssIcon(format == MediaFormat.mp3 ? 'music' : 'film',
@@ -107,31 +112,28 @@ class ReceiptCard extends StatelessWidget {
                     Text(fileName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Mss.mono(
-                            const TextStyle(fontSize: 12.5, color: Mss.display))),
+                        style: p.mono(TextStyle(fontSize: 12.5, color: p.display))),
                     const SizedBox(height: 3),
                     Text('${format.label} · $qualityLabel · $sizeLabel',
-                        style: Mss.serif(
-                            const TextStyle(fontSize: 12, color: Mss.faint))),
+                        style: p.serif(TextStyle(fontSize: 12, color: p.faint))),
                   ],
                 ),
               ),
             ],
           ),
-          const HairRule(margin: EdgeInsets.symmetric(vertical: 14)),
+          HairRule(palette: p, margin: const EdgeInsets.symmetric(vertical: 14)),
           Row(
             children: <Widget>[
               MssIcon('folder', size: 15, color: b.gold),
               const SizedBox(width: 8),
               Text('Saved to',
-                  style: Mss.serif(const TextStyle(fontSize: 12.5, color: Mss.muted))),
+                  style: p.serif(TextStyle(fontSize: 12.5, color: p.muted))),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(savedPath,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Mss.mono(
-                        const TextStyle(fontSize: 11.5, color: Color(0xFFD7C8AC)))),
+                    style: p.mono(TextStyle(fontSize: 11.5, color: p.menuItem))),
               ),
             ],
           ),

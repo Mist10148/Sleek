@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/services/storage_service.dart';
 import '../../domain/entities/media_format.dart';
@@ -17,14 +18,16 @@ import '../widgets/save_select.dart';
 
 /// Phase 3 — the record preview plus format / quality / destination options.
 class PreviewScreen extends ConsumerWidget {
-  const PreviewScreen({super.key, required this.binding, required this.state});
+  const PreviewScreen({super.key, required this.binding, required this.palette, required this.state});
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final ConversionState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ManuscriptBinding b = binding;
+    final MssPalette p = palette;
     final ConverterController c = ref.read(converterControllerProvider.notifier);
     final info = state.info!;
     final List<QualityOption> options = info.qualitiesFor(state.format);
@@ -51,6 +54,7 @@ class PreviewScreen extends ConsumerWidget {
                 width: 96,
                 child: MssGhostButton(
                   label: '‹  Anew',
+                  palette: p,
                   dense: true,
                   onPressed: c.reset,
                 ),
@@ -60,18 +64,19 @@ class PreviewScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 18),
-          PreviewCard(binding: b, info: info),
+          PreviewCard(binding: b, palette: p, info: info),
           const SizedBox(height: 24),
           if (b.ornament == 2)
             Fleuron(glyph: '⁂', gold: b.gold)
           else
-            const DoubleRule(),
+            DoubleRule(palette: p),
           const SizedBox(height: 24),
 
           MssLabel('Format', gold: b.gold),
           const SizedBox(height: 11),
           FormatSegmented(
             binding: b,
+            palette: p,
             value: state.format,
             onChanged: c.selectFormat,
           ),
@@ -81,6 +86,7 @@ class PreviewScreen extends ConsumerWidget {
           const SizedBox(height: 11),
           QualityPills(
             binding: b,
+            palette: p,
             format: state.format,
             options: options,
             selected: q,
@@ -92,27 +98,29 @@ class PreviewScreen extends ConsumerWidget {
           const SizedBox(height: 11),
           SaveSelect(
             binding: b,
+            palette: p,
             current: current,
             presets: <SaveLocation>[current],
             onSelect: (SaveLocation l) => c.setOutputDirectory(l.path),
             onBrowse: () => _browse(ref),
           ),
 
-          const HairRule(margin: EdgeInsets.fromLTRB(0, 24, 0, 16)),
+          HairRule(palette: p, margin: const EdgeInsets.fromLTRB(0, 24, 0, 16)),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Text('Estimated weight',
-                  style: Mss.serif(const TextStyle(fontSize: 13.5, color: Mss.muted))),
+                  style: p.serif(TextStyle(fontSize: 13.5, color: p.muted))),
               Text(estimate,
-                  style: Mss.mono(TextStyle(fontSize: 14, color: b.accent))),
+                  style: p.mono(TextStyle(fontSize: 14, color: b.accent))),
             ],
           ),
           const SizedBox(height: 15),
           MssPrimaryButton(
             binding: b,
+            palette: p,
             label: 'Transcribe ${state.format.label}',
-            leading: MssIcon('download', size: 17, color: Mss.ink),
+            leading: MssIcon('download', size: 17, color: p.ink),
             onPressed: state.canConvert ? c.convert : null,
           ),
         ],

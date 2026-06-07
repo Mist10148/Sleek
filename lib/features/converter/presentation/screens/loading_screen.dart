@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 import '../widgets/manuscript/crest.dart';
 import '../widgets/manuscript/mss_spinner.dart';
 import '../widgets/manuscript/primitives.dart';
 
 /// Phase 2 — retrieving the record. Spinner, animated dots, and a skeleton card.
 class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({super.key, required this.binding});
+  const LoadingScreen({super.key, required this.binding, required this.palette});
   final ManuscriptBinding binding;
+  final MssPalette palette;
 
   @override
   State<LoadingScreen> createState() => _LoadingScreenState();
@@ -18,24 +20,25 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   Widget build(BuildContext context) {
     final ManuscriptBinding b = widget.binding;
+    final MssPalette p = widget.palette;
     return Padding(
       padding: const EdgeInsets.fromLTRB(26, 70, 26, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Crest(binding: b, small: true),
+          Crest(binding: b, palette: p, small: true),
           const SizedBox(height: 40),
           Column(
             children: <Widget>[
-              MssSpinner(color: b.accent),
+              MssQuill(color: b.accent),
               const SizedBox(height: 18),
-              _RetrievingText(binding: b),
+              _RetrievingText(binding: b, palette: p),
               const SizedBox(height: 10),
               MssLabel('Reading manifest', gold: b.gold),
             ],
           ),
           const SizedBox(height: 38),
-          _SkeletonCard(binding: b),
+          _SkeletonCard(binding: b, palette: p),
         ],
       ),
     );
@@ -43,8 +46,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
 }
 
 class _RetrievingText extends StatefulWidget {
-  const _RetrievingText({required this.binding});
+  const _RetrievingText({required this.binding, required this.palette});
   final ManuscriptBinding binding;
+  final MssPalette palette;
 
   @override
   State<_RetrievingText> createState() => _RetrievingTextState();
@@ -74,22 +78,24 @@ class _RetrievingTextState extends State<_RetrievingText> {
         const TextSpan(text: 'Retrieving the record'),
         TextSpan(text: _dots, style: TextStyle(color: widget.binding.accent)),
       ]),
-      style: widget.binding.display0(const TextStyle(fontSize: 18, color: Mss.display)),
+      style: widget.binding.display0(TextStyle(fontSize: 18, color: widget.palette.display)),
     );
   }
 }
 
 class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard({required this.binding});
+  const _SkeletonCard({required this.binding, required this.palette});
   final ManuscriptBinding binding;
+  final MssPalette palette;
 
   @override
   Widget build(BuildContext context) {
+    final MssPalette p = palette;
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0x99140F0A),
+        color: p.cardBg,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Mss.rule(0.24)),
+        border: Border.all(color: p.rule(0.24)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -139,8 +145,8 @@ class _SkeletonCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(3),
                         gradient: LinearGradient(colors: <Color>[
-                          Mss.rule(0.18),
-                          Mss.rule(0.06),
+                          p.rule(0.18),
+                          p.rule(0.06),
                         ]),
                       ),
                     ),

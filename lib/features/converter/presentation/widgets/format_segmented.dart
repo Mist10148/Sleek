@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 import '../../domain/entities/media_format.dart';
 import 'manuscript/mss_icons.dart';
 
@@ -10,11 +12,13 @@ class FormatSegmented extends StatelessWidget {
   const FormatSegmented({
     super.key,
     required this.binding,
+    required this.palette,
     required this.value,
     required this.onChanged,
   });
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final MediaFormat value;
   final ValueChanged<MediaFormat> onChanged;
 
@@ -23,9 +27,9 @@ class FormatSegmented extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0x800C0906),
+        color: palette.overlay50,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Mss.rule(0.2)),
+        border: Border.all(color: palette.rule(0.2)),
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints c) {
@@ -73,11 +77,17 @@ class FormatSegmented extends StatelessWidget {
 
   Widget _opt(MediaFormat f, String icon) {
     final bool on = f == value;
-    final Color c = on ? Mss.ink : const Color(0xFF9D8F76);
+    final Color c = on ? palette.ink : palette.muted;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: () => onChanged(f),
+        onTap: () {
+          // Switching MP3 ↔ MP4 reshapes the whole screen below it — a
+          // light click marks the choice the instant the tap lands, the
+          // same restrained spirit as the quality pills it sits above.
+          HapticFeedback.lightImpact();
+          onChanged(f);
+        },
         child: SizedBox(
           height: 58,
           child: Column(

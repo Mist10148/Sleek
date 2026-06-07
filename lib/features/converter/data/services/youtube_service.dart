@@ -62,8 +62,21 @@ class YoutubeService {
         await _yt.videos.streamsClient.getManifest(videoId);
 
     if (format.isAudio) {
-      if (manifest.audioOnly.isEmpty) throw Failures.noStream();
-      return manifest.audioOnly.withHighestBitrate();
+      // MP3 source audio always comes from a muxed (progressive) stream —
+      // the exact same kind of stream the MP4 path already downloads
+      // reliably, every time. Adaptive audio-only streams are a notorious
+      // trouble spot: they require YouTube signature deciphering AND are
+      // throttled server-side to roughly real-time playback speed as an
+      // anti-scraping measure (a 4-minute song can take ~4 real-time minutes
+      // to trickle in — which looks exactly like a stuck/frozen download).
+      // `ConversionService` already passes ffmpeg `-vn`, which discards the
+      // video track during re-encoding, so only the audio survives — there's
+      // no real downside to sourcing from a muxed stream here.
+      if (manifest.muxed.isEmpty) throw Failures.noStream();
+
+      // Smallest muxed stream — we only keep its audio track, so there is no
+      // reason to download a large high-resolution video alongside it.
+      return manifest.muxed.sortByVideoQuality().last;
     }
 
     if (manifest.muxed.isEmpty) throw Failures.noStream();
@@ -71,6 +84,26 @@ class YoutubeService {
       (MuxedStreamInfo s) => s.qualityLabel == quality.tag,
       orElse: () => manifest.muxed.bestQuality,
     );
+  }
+
+  /// Resolves a muxed stream other than [excludeTag] for the MP3 pipeline to
+  /// retry with, in the rare case the first pick's URL turns out to be dead
+  /// at download time. Prefers the next-smallest available quality. Returns
+  /// `null` if there's no other muxed stream to try.
+  Future<StreamInfo?> alternateMuxedStream(String videoId, {required int excludeTag}) async {
+    try {
+      final StreamManifest manifest =
+          await _yt.videos.streamsClient.getManifest(videoId);
+      final List<MuxedStreamInfo> candidates = manifest.muxed
+          .sortByVideoQuality()
+          .where((MuxedStreamInfo s) => s.tag != excludeTag)
+          .toList();
+      if (candidates.isEmpty) return null;
+      // Smallest of the remaining options — again, only its audio matters.
+      return candidates.last;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Opens a byte stream for the resolved [info].

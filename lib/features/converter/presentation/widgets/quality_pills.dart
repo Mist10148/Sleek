@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/manuscript_theme.dart';
+import '../../../../core/theme/mss_palette.dart';
 import '../../domain/entities/media_format.dart';
 
-/// Selectable quality pills (`.mss-pills`). For video the numeral gets a `p`
-/// suffix; for audio it's the raw bitrate. Shows a friendly note when empty.
+/// Selectable quality pills (`.mss-pills`).
 class QualityPills extends StatelessWidget {
   const QualityPills({
     super.key,
     required this.binding,
+    required this.palette,
     required this.format,
     required this.options,
     required this.selected,
@@ -17,6 +19,7 @@ class QualityPills extends StatelessWidget {
   });
 
   final ManuscriptBinding binding;
+  final MssPalette palette;
   final MediaFormat format;
   final List<QualityOption> options;
   final QualityOption? selected;
@@ -27,7 +30,7 @@ class QualityPills extends StatelessWidget {
     if (options.isEmpty) {
       return Text(
         'No quality options available for this format.',
-        style: Mss.serif(const TextStyle(fontSize: 13.5, color: Mss.muted)),
+        style: palette.serif(TextStyle(fontSize: 13.5, color: palette.muted)),
       );
     }
     return Wrap(
@@ -40,16 +43,23 @@ class QualityPills extends StatelessWidget {
   }
 
   Widget _pill(QualityOption o) {
+    final MssPalette p = palette;
     final bool on = o == selected;
     final String big = format == MediaFormat.mp4 ? '${o.q}p' : o.q;
     return GestureDetector(
-      onTap: () => onChanged(o),
+      onTap: () {
+        // Picking a bitrate is a real choice with consequences (file size,
+        // fidelity) — a light tactile click confirms it landed, the same
+        // restrained touch as the format toggle beside it.
+        HapticFeedback.lightImpact();
+        onChanged(o);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(3),
-          color: on ? binding.accentSoft : const Color(0x660C0906),
-          border: Border.all(color: on ? binding.accent : Mss.rule(0.26)),
+          color: on ? binding.accentSoft : p.pillBg,
+          border: Border.all(color: on ? binding.accent : p.rule(0.26)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -62,15 +72,14 @@ class QualityPills extends StatelessWidget {
                   textStyle: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: on ? Mss.display : const Color(0xFFB6A688))),
+                      color: on ? p.display : p.pillLabel)),
             ),
             const SizedBox(width: 7),
             Text(
               o.meta,
-              style: Mss.mono(TextStyle(
+              style: p.mono(TextStyle(
                   fontSize: 9.5,
-                  color: (on ? Mss.display : const Color(0xFFB6A688))
-                      .withValues(alpha: 0.6))),
+                  color: (on ? p.display : p.pillLabel).withValues(alpha: 0.6))),
             ),
           ],
         ),
