@@ -11,6 +11,7 @@ import '../../converter/presentation/providers/theme_provider.dart';
 import '../../converter/presentation/screens/home_screen.dart';
 import '../../converter/presentation/widgets/manuscript/manuscript_background.dart';
 import '../../converter/presentation/widgets/manuscript/mss_icons.dart';
+import '../../library/presentation/providers/device_library_provider.dart';
 import '../../library/presentation/providers/library_provider.dart';
 import '../../library/presentation/providers/player_controller.dart';
 import '../../library/presentation/screens/library_screen.dart';
@@ -32,8 +33,32 @@ class AppShell extends ConsumerStatefulWidget {
   ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver {
   _ShellTab _tab = _ShellTab.download;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The system permission dialog backgrounds the host Activity; on some
+    // devices the awaited `requestPermission()` Future never resolves once
+    // it's paused/recreated, leaving the library stuck on the permission
+    // prompt. Re-reading the OS permission state on resume guarantees the UI
+    // reflects reality regardless of whether that Future ever completes.
+    if (state == AppLifecycleState.resumed) {
+      ref.read(deviceLibraryProvider.notifier).recheckOnResume();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

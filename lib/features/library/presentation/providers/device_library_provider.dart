@@ -28,6 +28,12 @@ class DeviceLibraryState {
 class DeviceLibraryNotifier extends Notifier<DeviceLibraryState> {
   late final DeviceLibraryService _service = DeviceLibraryService();
 
+  /// Guards against overlapping permission checks: `requestAccess()` shows
+  /// the system dialog (which pauses the host Activity, see [recheckOnResume])
+  /// and a resume-triggered recheck can otherwise race its continuation and
+  /// stomp the resulting state.
+  bool _checking = false;
+
   @override
   DeviceLibraryState build() {
     Future.microtask(_checkAndLoad);
@@ -35,34 +41,58 @@ class DeviceLibraryNotifier extends Notifier<DeviceLibraryState> {
   }
 
   Future<void> _checkAndLoad() async {
-    final PermissionStatus status = await _service.permissionStatus();
-    if (status.isGranted) {
-      await _scan();
-    } else {
-      state = state.copyWith(
-        status: status.isPermanentlyDenied
-            ? DeviceLibraryStatus.permanentlyDenied
-            : DeviceLibraryStatus.denied,
-      );
+    if (_checking) return;
+    _checking = true;
+    try {
+      final PermissionStatus status = await _service.permissionStatus();
+      if (status.isGranted) {
+        await _scan();
+      } else {
+        state = state.copyWith(
+          status: status.isPermanentlyDenied
+              ? DeviceLibraryStatus.permanentlyDenied
+              : DeviceLibraryStatus.denied,
+        );
+      }
+    } finally {
+      _checking = false;
     }
+  }
+
+  /// Re-reads the OS permission state — call this when the app returns to the
+  /// foreground. The system permission dialog backgrounds the host Activity,
+  /// and on some devices/Android versions the awaited `requestPermission()`
+  /// Future never resolves (or resolves against a stale Activity) once it's
+  /// paused or recreated, leaving the UI stuck on the "denied" prompt even
+  /// though the OS now reports the permission as granted. Re-checking on
+  /// resume guarantees the UI reflects reality regardless of whether that
+  /// Future ever completes.
+  Future<void> recheckOnResume() async {
+    await _checkAndLoad();
   }
 
   /// Prompts the user for the audio permission, then scans on success.
   Future<void> requestAccess() async {
-    final PermissionStatus current = await _service.permissionStatus();
-    if (current.isPermanentlyDenied) {
-      state = state.copyWith(status: DeviceLibraryStatus.permanentlyDenied);
-      return;
-    }
-    final PermissionStatus result = await _service.requestPermission();
-    if (result.isGranted) {
-      await _scan();
-    } else {
-      state = state.copyWith(
-        status: result.isPermanentlyDenied
-            ? DeviceLibraryStatus.permanentlyDenied
-            : DeviceLibraryStatus.denied,
-      );
+    if (_checking) return;
+    _checking = true;
+    try {
+      final PermissionStatus current = await _service.permissionStatus();
+      if (current.isPermanentlyDenied) {
+        state = state.copyWith(status: DeviceLibraryStatus.permanentlyDenied);
+        return;
+      }
+      final PermissionStatus result = await _service.requestPermission();
+      if (result.isGranted) {
+        await _scan();
+      } else {
+        state = state.copyWith(
+          status: result.isPermanentlyDenied
+              ? DeviceLibraryStatus.permanentlyDenied
+              : DeviceLibraryStatus.denied,
+        );
+      }
+    } finally {
+      _checking = false;
     }
   }
 

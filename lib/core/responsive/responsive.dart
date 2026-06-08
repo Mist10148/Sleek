@@ -18,21 +18,26 @@ class Responsive {
 
 /// Centers its [child] and caps the width on large screens so content stays
 /// comfortably readable on tablets and in landscape.
+///
+/// Leave [maxWidth] unset to use the responsive default — the manuscript
+/// column on phones, widened on tablets so the app doesn't read as a phone
+/// window stranded in a sea of empty surround (pass an explicit value only
+/// when a screen needs a different cap regardless of device size).
 class ContentContainer extends StatelessWidget {
-  const ContentContainer({
-    super.key,
-    required this.child,
-    this.maxWidth = AppConstants.maxContentWidth,
-  });
+  const ContentContainer({super.key, required this.child, this.maxWidth});
 
   final Widget child;
-  final double maxWidth;
+  final double? maxWidth;
 
   @override
   Widget build(BuildContext context) {
+    final double effectiveMax = maxWidth ??
+        (Responsive.isTablet(context)
+            ? AppConstants.maxContentWidthTablet
+            : AppConstants.maxContentWidth);
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: BoxConstraints(maxWidth: effectiveMax),
         child: child,
       ),
     );

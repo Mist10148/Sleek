@@ -13,6 +13,11 @@ class AppConstants {
   /// wider screens the column is centered on the dark surround.
   static const double maxContentWidth = 440;
 
+  /// Column width on tablets — wide enough that the app doesn't read as a
+  /// phone window stranded in a sea of empty surround, while still keeping
+  /// the manuscript's comfortable reading measure.
+  static const double maxContentWidthTablet = 760;
+
   /// Default sub-folder created inside the chosen directory for outputs.
   static const String outputFolderName = 'Sleek';
 }

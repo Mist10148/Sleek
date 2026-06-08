@@ -58,6 +58,14 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# path_provider_android 2.3.0+ rewrote its internals on top of `package:jni`,
+# which crashes on launch in release/AOT builds with a SIGSEGV null-pointer
+# dereference inside `FindClassUnchecked` (the JNI env isn't ready yet when
+# `getExternalStorageDirectory()` runs during startup). Pin to the last
+# release before that rewrite, which uses the stable MethodChannel bridge.
+dependency_overrides:
+  path_provider_android: 2.2.23
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

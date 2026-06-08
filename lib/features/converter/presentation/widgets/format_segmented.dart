@@ -33,7 +33,10 @@ class FormatSegmented extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints c) {
-          final double w = (c.maxWidth - 4) / 2; // two options, 4px gap split
+          // Clamp against transient near-zero `maxWidth` layout passes (e.g.
+          // the first frame) — otherwise this goes negative and Flutter
+          // throws a "BoxConstraints has a negative minimum width" assertion.
+          final double w = ((c.maxWidth - 4) / 2).clamp(0.0, double.infinity); // two options, 4px gap split
           return Stack(
             children: <Widget>[
               AnimatedAlign(

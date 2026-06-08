@@ -97,8 +97,10 @@ class MiniPlayer extends ConsumerWidget {
             ),
             Positioned(
               left: 0,
+              right: 0,
               bottom: 0,
               child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
                 widthFactor: frac,
                 child: Container(height: 2, color: binding.accent),
               ),

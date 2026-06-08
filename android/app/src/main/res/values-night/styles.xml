@@ -5,6 +5,11 @@
         <!-- Show a splash screen on the activity. Automatically removed when
              the Flutter engine draws its first frame -->
         <item name="android:windowBackground">@drawable/launch_background</item>
+        <!-- See values/styles.xml — disables the OS's cached-task-snapshot
+             "starting window" preview, which can get stuck on top of the live
+             FlutterView and silently swallow touches in stale-vs-live layout
+             mismatch regions (observed on Samsung One UI). -->
+        <item name="android:windowDisablePreview">true</item>
     </style>
     <!-- Theme applied to the Android Window as soon as the process has started.
          This theme determines the color of the Android Window while your

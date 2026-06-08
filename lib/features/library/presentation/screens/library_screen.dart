@@ -117,7 +117,11 @@ class _LibraryTabs extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints c) {
-          final double w = (c.maxWidth - 8) / 2;
+          // LayoutBuilder can report a near-zero `maxWidth` during transient
+          // layout passes (e.g. the very first frame); without clamping, the
+          // subtraction below yields a negative width and Flutter throws a
+          // "BoxConstraints has a negative minimum width" assertion.
+          final double w = ((c.maxWidth - 8) / 2).clamp(0.0, double.infinity);
           return Stack(
             children: <Widget>[
               AnimatedAlign(

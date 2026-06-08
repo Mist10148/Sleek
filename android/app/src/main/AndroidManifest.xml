@@ -14,6 +14,15 @@
     <!-- Lets the in-app player detect & play music already on the device
          (Android 13+ granular media permission for audio). -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
+    <!-- on_audio_query's Android backend checks for BOTH READ_MEDIA_AUDIO and
+         READ_MEDIA_IMAGES on Android 13+ (it also surfaces embedded artwork via
+         MediaStore.Images) before honouring any query. Without this declared
+         and granted, its internal permission check fails even though our own
+         `Permission.audio` check reports success — and its `querySongs` handler
+         then replies to the platform-channel result twice (once with an error,
+         once with the query results, since it's missing a `return` after the
+         first), crashing the whole app with "Reply already submitted". -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 
     <application
         android:label="Sleek"
